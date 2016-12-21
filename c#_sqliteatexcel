@@ -14,7 +14,7 @@ namespace pr
 {
     public partial class Form1 : Form
     {
-        SQLiteConnection db_con = new SQLiteConnection("Data Source=C:\\Users\\user\\Desktop\\project_pr\\testpr.db;Version=3;"); //Database Connection
+        SQLiteConnection db_con = new SQLiteConnection("Data Source=C:\dblocationgoeshere;Version=3;"); //Database Connection
         Excel.Application xlapp = new Excel.Application(); //*******************
         Excel.Workbook xlwb;                               //**EXCEL************
         Excel.Worksheet xlws;                              //********VARIABLES**
@@ -64,7 +64,7 @@ namespace pr
         private void gents_Click(object sender, EventArgs e)
         {
             db_con.Open();
-            xlwb = xlapp.Workbooks.Open("C:\\Users\\user\\Desktop\\samplepayslip.xlsx");
+            xlwb = xlapp.Workbooks.Open("C:\filepathofexcelfile"); //here you place the url of your excel file
             xlws = (Excel.Worksheet)xlwb.Worksheets.get_Item(1);
             using (SQLiteCommand selcmd = new SQLiteCommand(db_con))
             {
@@ -84,7 +84,7 @@ namespace pr
                 }
                 xlws.Cells[6, "H"] = dt.Month.ToString();
                 xlws.Cells[8, "G"] = dbox.Text;
-                xlwb.SaveAs("C:\\Users\\user\\Desktop\\samplepayslip.xlsx", Excel.XlFileFormat.xlWorkbookDefault, misvalue, misvalue, misvalue, misvalue, Excel.XlSaveAsAccessMode.xlExclusive, misvalue, misvalue, misvalue, misvalue, misvalue);
+                xlwb.SaveAs("C:\filepathofexcelfile", Excel.XlFileFormat.xlWorkbookDefault, misvalue, misvalue, misvalue, misvalue, Excel.XlSaveAsAccessMode.xlExclusive, misvalue, misvalue, misvalue, misvalue, misvalue);
                 xlwb.Close();
                 xlapp.Quit();
                 noti.Text = "Timesheet Generated";
