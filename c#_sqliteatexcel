@@ -1,0 +1,106 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Data.SQLite;
+using Excel = Microsoft.Office.Interop.Excel;
+
+namespace pr
+{
+    public partial class Form1 : Form
+    {
+        SQLiteConnection db_con = new SQLiteConnection("Data Source=C:\\Users\\user\\Desktop\\project_pr\\testpr.db;Version=3;"); //Database Connection
+        Excel.Application xlapp = new Excel.Application(); //*******************
+        Excel.Workbook xlwb;                               //**EXCEL************
+        Excel.Worksheet xlws;                              //********VARIABLES**
+        object misvalue = System.Reflection.Missing.Value; //*******************
+        DateTime dt = DateTime.Now;
+        public Form1()
+        {
+            InitializeComponent();
+        }
+        private void regbutton_Click(object sender, EventArgs e)
+        {
+            db_con.Open(); //Open connection to sqlite
+            using (SQLiteTransaction mytransaction = db_con.BeginTransaction()) //Insert employee info to db
+            {
+                using (SQLiteCommand inscmd = new SQLiteCommand(db_con))
+                {
+                    inscmd.CommandText = "insert into empinfo (name,position,salary) values (@name,@job,@salary)";
+                    inscmd.Prepare();
+                    inscmd.Parameters.AddWithValue("@name",nbox.Text);
+                    inscmd.Parameters.AddWithValue("@job", jbox.Text);
+                    inscmd.Parameters.AddWithValue("@salary", sbox.Text);
+                    try { inscmd.ExecuteNonQuery(); }
+                    catch (Exception ex) { throw new Exception(ex.Message);}         
+                }
+                mytransaction.Commit();
+            }
+            noti.Text = "User has been added!";
+            db_con.Close(); //Close connection to sqlite
+            nbox.Text = String.Empty;
+            jbox.Text = String.Empty;
+            sbox.Text = String.Empty;
+            regbutton.Enabled = false;
+        }
+        public void cc(object sender, EventArgs e) //Check if textboxes are filled
+        {
+            if(nbox.Text.Length >1 && jbox.Text.Length >1 && sbox.Text.Length>1)
+            {
+                regbutton.Enabled = true;
+            }
+        }
+        public void tabc(object sender, EventArgs e) //Check if user switched to different tab
+        {
+            noti.Text = String.Empty;
+            noti.BackColor = Color.White;
+        }
+
+        private void gents_Click(object sender, EventArgs e)
+        {
+            db_con.Open();
+            xlwb = xlapp.Workbooks.Open("C:\\Users\\user\\Desktop\\samplepayslip.xlsx");
+            xlws = (Excel.Worksheet)xlwb.Worksheets.get_Item(1);
+            using (SQLiteCommand selcmd = new SQLiteCommand(db_con))
+            {
+                selcmd.CommandText = "select * from empinfo where id = @id";
+                selcmd.Prepare();
+                selcmd.Parameters.AddWithValue("@id", idbox.Text);
+                using(SQLiteDataReader reader = selcmd.ExecuteReader())
+                {
+                    while(reader.Read())
+                    {
+                        xlws.Cells[6, "B"] = reader["id"].ToString();
+                        xlws.Cells[5, "B"] = reader["name"].ToString();
+                        xlws.Cells[5, "H"] = reader["position"].ToString();
+                        xlws.Cells[8, "B"] = reader["salary"].ToString();
+                    }
+                    reader.Close();
+                }
+                xlws.Cells[6, "H"] = dt.Month.ToString();
+                xlws.Cells[8, "G"] = dbox.Text;
+                xlwb.SaveAs("C:\\Users\\user\\Desktop\\samplepayslip.xlsx", Excel.XlFileFormat.xlWorkbookDefault, misvalue, misvalue, misvalue, misvalue, Excel.XlSaveAsAccessMode.xlExclusive, misvalue, misvalue, misvalue, misvalue, misvalue);
+                xlwb.Close();
+                xlapp.Quit();
+                noti.Text = "Timesheet Generated";
+                noti.BackColor = Color.Green;
+            }
+            db_con.Close();
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            xlapp.Visible = false;
+            if (xlapp == null)
+            {
+                MessageBox.Show("Excel is not installed properly");
+                return;
+            }
+        }
+    }
+}
